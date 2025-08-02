@@ -27,9 +27,11 @@ import com.oltpbenchmark.distributions.UniformGenerator;
 import com.oltpbenchmark.distributions.ZipfianGenerator;
 import com.oltpbenchmark.types.TransactionStatus;
 import com.oltpbenchmark.util.TextGenerator;
+import com.oltpbenchmark.util.TransactionLogger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import org.json.JSONObject;
 
 /**
  * YCSBWorker Implementation I forget who really wrote this but I fixed it up in 2016...
@@ -103,34 +105,68 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
   private void updateRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     this.buildParameters();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "UpdateRecord");
+    txnJson.put("key", keyname);
+    // txnJson.put("values", values);
+    TransactionLogger.log(txnJson);
+
     this.procUpdateRecord.run(conn, keyname, this.params);
   }
 
   private void scanRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     int count = randScan.nextInt();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "ScanRecord");
+    txnJson.put("start_key", keyname);
+    txnJson.put("count", count);
+    TransactionLogger.log(txnJson);
+
     this.procScanRecord.run(conn, keyname, count, new ArrayList<>());
   }
 
   private void readRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "ReadRecord");
+    txnJson.put("key", keyname);
+    TransactionLogger.log(txnJson);
+
     this.procReadRecord.run(conn, keyname, this.results);
   }
 
   private void readModifyWriteRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     this.buildParameters();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "ReadModifyWriteRecord");
+    txnJson.put("key", keyname);
+    txnJson.put("new_values", params);
+    TransactionLogger.log(txnJson);
+
     this.procReadModifyWriteRecord.run(conn, keyname, this.params, this.results);
   }
 
   private void insertRecord(Connection conn) throws SQLException {
     int keyname = insertRecord.nextInt();
     this.buildParameters();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "InsertRecord");
+    txnJson.put("key", keyname);
+    // txnJson.put("values", "params");
+    TransactionLogger.log(txnJson);
+
     this.procInsertRecord.run(conn, keyname, this.params);
   }
 
   private void deleteRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
+    JSONObject txnJson = new JSONObject();
+    txnJson.put("type", "DeleteRecord");
+    txnJson.put("key", keyname);
+    TransactionLogger.log(txnJson);
+
     this.procDeleteRecord.run(conn, keyname);
   }
 
