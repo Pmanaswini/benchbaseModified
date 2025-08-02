@@ -24,6 +24,7 @@ import com.oltpbenchmark.api.Worker;
 import com.oltpbenchmark.benchmarks.ycsb.procedures.InsertRecord;
 import com.oltpbenchmark.catalog.Table;
 import com.oltpbenchmark.util.SQLUtil;
+import com.oltpbenchmark.util.TransactionLogger;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -64,6 +65,14 @@ public final class YCSBBenchmark extends BenchmarkModule {
       }
     }
     this.skewFactor = skewFactor;
+    // Register shutdown hook to flush remaining transactions
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  System.out.println("[SmallBank] Flushing pending transactions to JSON...");
+                  TransactionLogger.close();
+                }));
   }
 
   @Override
